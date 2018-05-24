@@ -1,11 +1,9 @@
-from flask import Flask,request, render_template, redirect, url_for
-# import simplejson as json
+from flask import Flask,request
 import requests
 import os
 import socket
 
-import urllib
-import urllib2
+import urllib3
 
 try:
     import http.client as http_client
@@ -19,8 +17,8 @@ http_client.HTTPConnection.debuglevel = 1
 # redis = Redis(host="redis", db=0, socket_connect_timeout=2, socket_timeout=2)
 app = Flask(__name__)
 
-from flask_bootstrap import Bootstrap
-Bootstrap(app)
+# from flask_bootstrap import Bootstrap
+# Bootstrap(app)
 
 
 
@@ -38,12 +36,13 @@ def hello():
 	
 @app.route('/python-sa-noheader/info')
 def portalRouteNoheader():
-    # url = "http://192.168.181.99:32693/sa/info"
-    url = "http://service-a:8081/sa/info"
-    req = urllib2.Request(url)
-    res_data = urllib2.urlopen(req)
-    res = res_data.read()
-    return res
+    url = "http://192.168.181.99:32693/sa/info"
+    # url = "http://service-a:8081/sa/info"
+    req = urllib3.PoolManager()
+    res_data = req.request('Get',url)
+
+    print(res_data.status)
+    return res_data.data
 	
 
 @app.route('/python-sa/info')
@@ -57,8 +56,8 @@ def portalRoute():
 def getProductReviews(headers):
     ## Do not remove. Bug introduced explicitly for illustration in fault injection task
     ## TODO: Figure out how to achieve the same effect using Envoy retries/timeouts
-    #url = "http://192.168.181.99:32693/sa/info"
-    url = "http://service-a:8081/sa/info"
+    url = "http://192.168.181.99:32693/sa/info"
+    # url = "http://service-a:8081/sa/info"
     res = requests.get(url, headers=headers, timeout=10.0)
     return res.text
     

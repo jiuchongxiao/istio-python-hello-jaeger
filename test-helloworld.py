@@ -1,3 +1,3 @@
 
-print "hello world,istio is very good!"
+print("hello world,istio is very good!")
 
