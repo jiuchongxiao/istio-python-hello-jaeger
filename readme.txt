@@ -1,5 +1,7 @@
-1.cd hello
 
+istio python helloworld jeager
+
+1.cd hello
 2.生成镜像
 docker build -t dinfo.cn/jiabao/python-hello:latest .
 3.cd ..
