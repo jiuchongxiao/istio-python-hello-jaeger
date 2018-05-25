@@ -1,3 +1,5 @@
 requests
 flask
 flask_bootstrap
+fluent
+msgpack

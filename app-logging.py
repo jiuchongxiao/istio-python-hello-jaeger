@@ -13,7 +13,10 @@ except ImportError:
     import httplib as http_client
 http_client.HTTPConnection.debuglevel = 1
 
-from fluent import sender, event
+import msgpack
+from io import BytesIO
+import logging
+from fluent import handler
 
 # Connect to Redis
 # redis = Redis(host="redis", db=0, socket_connect_timeout=2, socket_timeout=2)
@@ -22,12 +25,30 @@ app = Flask(__name__)
 # from flask_bootstrap import Bootstrap
 # Bootstrap(app)
 
+def overflow_handler(pendings):
+    unpacker = msgpack.Unpacker(BytesIO(pendings))
+    for unpacked in unpacker:
+        print(unpacked)
 
-sender.setup('helloworld', host='192.168.181.99', port=30224)
-# sender.setup('helloworld', host='fluentd-es.logging', port=24224)
+
+custom_format = {
+    'host': '%(hostname)s',
+    'where': '%(module)s.%(funcName)s',
+    'type': '%(levelname)s',
+    'stack_trace': '%(exc_text)s'
+}
+
+logging.basicConfig(level=logging.INFO)
+l = logging.getLogger('fluent.test')
+# h = handler.FluentHandler('fluent-python.log', host='fluentd-es.logging', port=24224, buffer_overflow_handler=overflow_handler)
+h = handler.FluentHandler('fluent-python.log', host='192.168.181.99', port=30224, buffer_overflow_handler=overflow_handler)
+formatter = handler.FluentRecordFormatter(custom_format)
+h.setFormatter(formatter)
+l.addHandler(h)
+
 @app.route("/")
 def hello():
-    event.Event('follow-event-base', {
+    l.info('follow-event-base', {
         'from': 'userA',
         'to':   'userB'
     })
@@ -43,7 +64,7 @@ def portalRouteNoheader():
     # url = "http://service-a:8081/sa/info"
     req = urllib3.PoolManager()
     res_data = req.request('Get',url)
-    event.Event('portalRouteNoheader', {
+    l.info('portalRouteNoheader', {
         'status': res_data.status,
         'data':   res_data.data
     })
@@ -55,7 +76,7 @@ def portalRouteNoheader():
 def portalRoute():
     headers = getForwardHeaders(request)
     portal = getProductReviews(headers)
-    event.Event('portalRoute', {
+    l.info('portalRoute', {
         'data': portal
     })
     return portal
